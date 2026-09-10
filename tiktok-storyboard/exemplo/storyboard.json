@@ -1,0 +1,115 @@
+{
+  "resumo": {
+    "produto": "Kit de chave de fenda magnetica 24 em 1",
+    "publico": "Homens 25-45, faz reparo em casa, gosta de ferramenta",
+    "estrutura": "gancho -> problema -> demonstracao -> prova -> cta",
+    "duracao_total": 32.8,
+    "por_que_funciona": [
+      "O gancho e uma ordem ('para tudo') nos primeiros 2s, antes de qualquer explicacao",
+      "Mostra a dor concreta (ponta escapando) antes de mostrar o produto",
+      "A prova e visual e silenciosa: o ima segurando o parafuso de cabeca pra baixo",
+      "O CTA aponta pro carrinho na propria fala, sem depender so da legenda"
+    ],
+    "erros_a_nao_repetir": [
+      "O original gasta 4s girando a caixa do produto - corte isso, ninguem quer ver embalagem",
+      "A musica cobre o som do clique da ponta, que e o detalhe mais satisfatorio do video"
+    ]
+  },
+  "biblia_visual": {
+    "maos": "Maos masculinas, ~35 anos, pele morena, unhas curtas, um pouco de graxa nos dedos, relogio de aco escovado no pulso esquerdo",
+    "ambiente": "Bancada de madeira crua, parede de tijolo desfocada ao fundo, uma tomada e um rolo de fita isolante fora de foco",
+    "luz": "Luz de janela lateral, morna, sombra suave, sem estourar o branco",
+    "camera": "POV primeira pessoa, lente 24mm, camera na mao, leve tremor natural",
+    "trecho_fixo": "First-person POV, no face visible. Hands of a 35-year-old man, tanned skin, short nails, faint grease on the fingertips, brushed steel watch on the left wrist. Raw wooden workbench, blurred red brick wall behind, out-of-focus roll of electrical tape. Warm side window light, soft shadows. 24mm lens, handheld, subtle natural shake. Vertical 9:16, crisp realistic footage."
+  },
+  "cenas": [
+    {
+      "n": 1,
+      "inicio": 0.0,
+      "fim": 6.0,
+      "duracao": 6.0,
+      "funcao": "gancho",
+      "origem": "nova",
+      "descricao": "Abre com a mao batendo uma chave de fenda velha e torta na bancada. O barulho seco e o gancho.",
+      "prompt_imagem": "First-person POV looking down at a raw wooden workbench, a man's hand holding an old bent rusty screwdriver mid-air just above the wood, red brick wall blurred behind, warm side window light, 24mm lens, shallow depth of field, vertical 9:16, photorealistic",
+      "prompt_video": "First-person POV, no face visible. Hands of a 35-year-old man, tanned skin, short nails, faint grease on the fingertips, brushed steel watch on the left wrist. Raw wooden workbench, blurred red brick wall behind, out-of-focus roll of electrical tape. Warm side window light, soft shadows. 24mm lens, handheld, subtle natural shake. Vertical 9:16, crisp realistic footage. The hand drops an old bent rusty screwdriver onto the workbench with a sharp clack, then shoves it aside with two fingers. Camera does a quick handheld tilt down to follow it. A male Brazilian narrator says in Portuguese: \"Para tudo. Se voce ainda usa chave de fenda velha, olha isso.\" Audio: dry metal clack on wood, quiet workshop room tone. No subtitles, no captions, no on-screen text, no watermark, no face, no logos.",
+      "fala": "Para tudo. Se voce ainda usa chave de fenda velha, olha isso.",
+      "legenda": "JOGA ESSA FORA",
+      "som": "Clack seco do metal na madeira, ambiente de oficina",
+      "palavras": 12,
+      "nota": "O clack tem que vir antes da fala. Se o Flow atrasar o som, corte os primeiros 3 frames na edicao."
+    },
+    {
+      "n": 2,
+      "inicio": 6.0,
+      "fim": 13.4,
+      "duracao": 7.4,
+      "funcao": "problema",
+      "origem": "encadeada",
+      "descricao": "Macro da ponta velha escapando e riscando a cabeca do parafuso. E a dor que todo mundo reconhece.",
+      "prompt_imagem": "Extreme macro first-person POV of a worn screwdriver tip slipping off a scratched Phillips screw head on a metal hinge, tiny metal burrs visible, warm side light, 24mm macro, very shallow depth of field, vertical 9:16, photorealistic",
+      "prompt_video": "First-person POV, no face visible. Hands of a 35-year-old man, tanned skin, short nails, faint grease on the fingertips, brushed steel watch on the left wrist. Raw wooden workbench, blurred red brick wall behind, out-of-focus roll of electrical tape. Warm side window light, soft shadows. 24mm lens, handheld, subtle natural shake. Vertical 9:16, crisp realistic footage. Extreme macro: the worn screwdriver tip slips out of a scratched screw head twice, chewing the metal. Camera slowly pushes in on the damaged screw. A male Brazilian narrator says in Portuguese: \"Sabe quando a ponta escapa e risca o parafuso todo? Isso acaba hoje.\" Audio: metallic scrape, frustrated exhale. No subtitles, no captions, no on-screen text, no watermark, no face, no logos.",
+      "fala": "Sabe quando a ponta escapa e risca o parafuso todo? Isso acaba hoje.",
+      "legenda": "TODO MUNDO JA PASSOU POR ISSO",
+      "som": "Raspa de metal, suspiro de irritacao",
+      "palavras": 13,
+      "nota": "Encadeada: exporte o ultimo frame da cena 1 e use como imagem inicial, a mesa continua a mesma."
+    },
+    {
+      "n": 3,
+      "inicio": 13.4,
+      "fim": 20.8,
+      "duracao": 7.4,
+      "funcao": "demonstracao",
+      "origem": "nova",
+      "descricao": "Abre o estojo, o leque de pontas aparece, encaixa uma com clique.",
+      "prompt_imagem": "First-person POV of hands opening a compact black screwdriver case on a wooden workbench, revealing a neat row of 24 chrome bits in foam, warm side window light, 24mm lens, vertical 9:16, photorealistic",
+      "prompt_video": "First-person POV, no face visible. Hands of a 35-year-old man, tanned skin, short nails, faint grease on the fingertips, brushed steel watch on the left wrist. Raw wooden workbench, blurred red brick wall behind, out-of-focus roll of electrical tape. Warm side window light, soft shadows. 24mm lens, handheld, subtle natural shake. Vertical 9:16, crisp realistic footage. The hands flip open a compact case revealing 24 chrome bits in black foam, the index finger runs across the row, then pulls one bit and snaps it into the magnetic handle. Camera holds locked-off, then a small push-in on the click. A male Brazilian narrator says in Portuguese: \"Sao vinte e quatro pontas magneticas. Encaixa, trava, e nao escapa mais.\" Audio: crisp plastic snap of the case, sharp metallic click of the bit locking in. No subtitles, no captions, no on-screen text, no watermark, no face, no logos.",
+      "fala": "Sao vinte e quatro pontas magneticas. Encaixa, trava, e nao escapa mais.",
+      "legenda": "24 PONTAS NUM SO",
+      "som": "Estalo do estojo, clique metalico do encaixe",
+      "palavras": 12,
+      "nota": "O clique do encaixe e o momento mais satisfatorio. Deixe o audio limpo aqui, sem musica por cima."
+    },
+    {
+      "n": 4,
+      "inicio": 20.8,
+      "fim": 25.8,
+      "duracao": 5.0,
+      "funcao": "prova",
+      "origem": "encadeada",
+      "descricao": "Vira a chave de cabeca pra baixo com o parafuso grudado no ima. Prova silenciosa.",
+      "prompt_imagem": "Macro first-person POV of a screwdriver held upside down with a steel screw stuck to the magnetic tip, defying gravity, wooden workbench blurred below, warm side light, 24mm macro, vertical 9:16, photorealistic",
+      "prompt_video": "First-person POV, no face visible. Hands of a 35-year-old man, tanned skin, short nails, faint grease on the fingertips, brushed steel watch on the left wrist. Raw wooden workbench, blurred red brick wall behind, out-of-focus roll of electrical tape. Warm side window light, soft shadows. 24mm lens, handheld, subtle natural shake. Vertical 9:16, crisp realistic footage. The hand slowly rotates the screwdriver upside down; a steel screw stays stuck to the magnetic tip and does not fall, then the hand shakes it lightly twice and the screw still holds. Camera macro, locked-off, tiny handheld drift. A male Brazilian narrator says in Portuguese: \"Olha a forca do ima. O parafuso nem cai.\" Audio: soft fabric and skin movement, quiet room tone. No subtitles, no captions, no on-screen text, no watermark, no face, no logos.",
+      "fala": "Olha a forca do ima. O parafuso nem cai.",
+      "legenda": "NAO CAI",
+      "som": "Quase silencio, so o ambiente",
+      "palavras": 9,
+      "nota": "Cena curta de proposito. Corte no segundo balanco, antes de virar repeticao."
+    },
+    {
+      "n": 5,
+      "inicio": 25.8,
+      "fim": 32.8,
+      "duracao": 7.0,
+      "funcao": "cta",
+      "origem": "nova",
+      "descricao": "Fecha o estojo, empurra na direcao da camera e aponta pro canto de baixo.",
+      "prompt_imagem": "First-person POV of hands closing a compact black tool case and sliding it toward the camera on a wooden workbench, index finger pointing down toward the bottom of the frame, warm side window light, 24mm lens, vertical 9:16, photorealistic",
+      "prompt_video": "First-person POV, no face visible. Hands of a 35-year-old man, tanned skin, short nails, faint grease on the fingertips, brushed steel watch on the left wrist. Raw wooden workbench, blurred red brick wall behind, out-of-focus roll of electrical tape. Warm side window light, soft shadows. 24mm lens, handheld, subtle natural shake. Vertical 9:16, crisp realistic footage. The hands snap the case shut, slide it toward the camera, then the index finger taps twice pointing down at the bottom of the frame. Camera tilts down following the finger. A male Brazilian narrator says in Portuguese: \"Ta na promocao do carrinho aqui embaixo. Corre que acaba.\" Audio: plastic case snap, case sliding on wood. No subtitles, no captions, no on-screen text, no watermark, no face, no logos.",
+      "fala": "Ta na promocao do carrinho aqui embaixo. Corre que acaba.",
+      "legenda": "CARRINHO AMARELO",
+      "som": "Estalo do estojo fechando, deslizar na madeira",
+      "palavras": 10,
+      "nota": "O dedo apontando pra baixo tem que terminar no canto inferior esquerdo, onde fica o carrinho no TikTok."
+    }
+  ],
+  "trilha": "Hip hop instrumental seco, grave marcado, baixo o suficiente pra nao cobrir os cliques",
+  "cta_final": "Ta na promocao do carrinho aqui embaixo. Corre que acaba.",
+  "edicao": [
+    "Corte duro entre todas as cenas, zero transicao",
+    "Legenda queimada grande, centralizada, aparecendo palavra por palavra",
+    "Suba o volume dos cliques e estalos uns 6dB acima da musica",
+    "O primeiro frame tem que ter movimento: nada de comecar com quadro parado"
+  ]
+}

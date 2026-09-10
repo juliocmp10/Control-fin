@@ -1,0 +1,7 @@
+# obrigatorios
+imageio-ffmpeg>=0.4.9   # traz o ffmpeg junto, sem precisar instalar a parte
+pillow>=10.0            # mosaico, tiras e rotulos
+
+# opcionais
+faster-whisper>=1.0     # transcreve a fala do video (sem isso, a fala sai das legendas na tela)
+requests>=2.31          # so pro modo automatico (analisador.py)
