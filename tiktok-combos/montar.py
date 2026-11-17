@@ -159,7 +159,7 @@ def trechos_com_fala(src, pausa_max=0.20, folga_ini=0.06, folga_fim=0.10):
     ruido, fala = np.percentile(db, 10), np.percentile(db, 95)
     if fala - ruido < 12:          # não tem diferença clara entre fala e silêncio
         return None
-    ativo = db > ruido + 0.3 * (fala - ruido)
+    ativo = db > ruido + 0.45 * (fala - ruido)
 
     ini_audio = float(run(["ffprobe", "-v", "error", "-select_streams", "a:0", "-show_entries",
                            "stream=start_time", "-of", "default=nw=1:nk=1", str(src)]).strip() or 0)
@@ -233,11 +233,24 @@ def filtro_texto(texto, pasta_tmp, rot):
     return ",".join(filtros)
 
 
+def eh_hdr(path):
+    """iPhone grava em HDR (HLG/Dolby Vision); sem conversão as cores ficam lavadas."""
+    out = run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
+               "stream=color_transfer", "-of", "default=nw=1:nk=1", str(path)]).strip()
+    return out in ("arib-std-b67", "smpte2084")
+
+
+HDR_PARA_SDR = ("zscale=t=linear:npl=150,format=gbrpf32le,zscale=p=bt709,"
+                "tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p")
+
+
 def normalizar(src, dst, cortar_silencio=True, texto=None, rot="X"):
     """Deixa toda cena em 1080x1920, 30fps, H.264 + AAC estéreo, para emendar sem pulos.
     Com cortar_silencio, remove respiros e pausas (cortes secos, estilo TikTok)."""
     base = (f"scale={W}:{H}:force_original_aspect_ratio=decrease,"
             f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,format=yuv420p")
+    if eh_hdr(src):
+        base = base.replace(f"pad={W}", f"{HDR_PARA_SDR},pad={W}", 1)
     if texto:
         base += "," + filtro_texto(texto, Path(dst).parent, rot)
     audio = tem_audio(src)
