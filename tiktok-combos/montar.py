@@ -140,19 +140,86 @@ def classificar(pasta):
     return cenas
 
 
-def normalizar(src, dst):
-    """Deixa toda cena em 1080x1920, 30fps, H.264 + AAC estéreo, para emendar sem pulos."""
-    vf = (f"scale={W}:{H}:force_original_aspect_ratio=decrease,"
-          f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,fps={FPS},format=yuv420p")
+def trechos_com_fala(src, pausa_max=0.20, folga_ini=0.06, folga_fim=0.10):
+    """Acha os trechos com som (fala) e devolve [(ini, fim), ...] em segundos,
+    alinhados aos quadros do vídeo. Pausas maiores que pausa_max são cortadas.
+    Devolve None se não der para separar fala de silêncio (ex.: só música)."""
+    import numpy as np
+    sr, passo = 16000, 0.02
+    bruto = subprocess.run(["ffmpeg", "-v", "error", "-i", str(src), "-map", "0:a:0", "-ac", "1",
+                            "-ar", str(sr), "-f", "s16le", "-"],
+                           stdout=subprocess.PIPE, check=True).stdout
+    amostras = np.frombuffer(bruto, dtype=np.int16).astype(np.float32) / 32768
+    n = int(sr * passo)
+    if len(amostras) < n * 10:
+        return None
+    blocos = amostras[: len(amostras) // n * n].reshape(-1, n)
+    db = 20 * np.log10(np.sqrt((blocos ** 2).mean(axis=1)) + 1e-9)
+    ruido, fala = np.percentile(db, 10), np.percentile(db, 95)
+    if fala - ruido < 12:          # não tem diferença clara entre fala e silêncio
+        return None
+    ativo = db > ruido + 0.3 * (fala - ruido)
+
+    ini_audio = float(run(["ffprobe", "-v", "error", "-select_streams", "a:0", "-show_entries",
+                           "stream=start_time", "-of", "default=nw=1:nk=1", str(src)]).strip() or 0)
+    trechos, i = [], 0
+    while i < len(ativo):
+        if ativo[i]:
+            j = i
+            while j < len(ativo) and ativo[j]:
+                j += 1
+            trechos.append([i * passo, j * passo])
+            i = j
+        else:
+            i += 1
+    # junta trechos separados por pausas curtas (entre palavras)
+    juntos = []
+    for a, b in trechos:
+        if juntos and a - juntos[-1][1] <= pausa_max:
+            juntos[-1][1] = b
+        else:
+            juntos.append([a, b])
+    juntos = [t for t in juntos if t[1] - t[0] >= 0.08]   # descarta estalos
+    if not juntos:
+        return None
+    total = len(ativo) * passo
+    finais = []
+    for a, b in juntos:
+        a, b = max(0, a - folga_ini), min(total, b + folga_fim)
+        a = int((a + ini_audio) * FPS) / FPS                 # alinha ao quadro
+        b = -(-int(round((b + ini_audio) * FPS * 1000)) // 1000) / FPS
+        if finais and a <= finais[-1][1]:
+            finais[-1][1] = max(finais[-1][1], b)
+        else:
+            finais.append([a, b])
+    return finais
+
+
+def normalizar(src, dst, cortar_silencio=True):
+    """Deixa toda cena em 1080x1920, 30fps, H.264 + AAC estéreo, para emendar sem pulos.
+    Com cortar_silencio, remove respiros e pausas (cortes secos, estilo TikTok)."""
+    base = (f"scale={W}:{H}:force_original_aspect_ratio=decrease,"
+            f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,format=yuv420p")
     audio = tem_audio(src)
+    trechos = trechos_com_fala(src) if (audio and cortar_silencio) else None
     cmd = ["ffmpeg", "-y", "-v", "error", "-i", str(src)]
     if not audio:
         cmd += ["-f", "lavfi", "-i", f"anullsrc=r={AR}:cl=stereo"]
-    # áudio com exatamente a mesma duração do vídeo (evita dessincronizar ao emendar)
-    cmd += ["-map", "0:v:0", "-map", "0:a:0" if audio else "1:a:0",
-            "-vf", vf, "-af", "aresample=async=1,apad", "-shortest",
-            "-fflags", "+shortest", "-max_interleave_delta", "0",
-            "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+    if trechos:
+        antes, depois = duracao(src), sum(b - a for a, b in trechos)
+        print(f"    cortes: {len(trechos)} trecho(s), {antes:.1f}s -> {depois:.1f}s")
+        sel_v = "+".join(f"between(t,{a:.4f},{b - 0.001:.4f})" for a, b in trechos)
+        sel_a = "+".join(f"between(t,{a:.4f},{b:.4f})" for a, b in trechos)
+        filtro = (f"[0:v:0]fps={FPS},select='{sel_v}',setpts=N/{FPS}/TB,{base}[v];"
+                  f"[0:a:0]aselect='{sel_a}',asetpts=N/SR/TB,aresample={AR},"
+                  f"apad=whole_dur={depois:.4f}[a]")
+        # áudio e vídeo com exatamente a mesma duração (evita dessincronizar ao emendar)
+        cmd += ["-filter_complex", filtro, "-map", "[v]", "-map", "[a]", "-t", f"{depois:.4f}"]
+    else:
+        cmd += ["-map", "0:v:0", "-map", "0:a:0" if audio else "1:a:0",
+                "-vf", f"fps={FPS},{base}", "-af", "aresample=async=1,apad",
+                "-shortest", "-fflags", "+shortest", "-max_interleave_delta", "0"]
+    cmd += ["-c:v", "libx264", "-preset", "medium", "-crf", "18",
             "-c:a", "aac", "-b:a", "192k", "-ar", str(AR), "-ac", "2",
             "-map_metadata", "-1", "-movflags", "+faststart", str(dst)]
     run(cmd)
@@ -228,6 +295,10 @@ def main():
                     "5,2,2 = 5 ganchos, 2 desenv, 2 CTAs (ou GGGGGDDCC)")
     ap.add_argument("--conferir", action="store_true",
                     help="só gera conferencia.png (quadro de cada cena com rótulo) e para")
+    ap.add_argument("--sem-cortes", action="store_true",
+                    help="não corta silêncios (use em vídeos sem narração)")
+    ap.add_argument("--nao-cortar", default="",
+                    help="cenas que não devem ter silêncio cortado, ex.: D1,G3")
     args = ap.parse_args()
 
     if not shutil.which("ffmpeg"):
@@ -251,10 +322,12 @@ def main():
     norm = {}
     for t in "GDC":
         for i, f in enumerate(cenas[t]):
-            dst = tmp / f"{t}{i+1}.mp4"
+            rot = f"{t}{i+1}"
+            cortar = not args.sem_cortes and rot not in args.nao_cortar.upper().split(",")
+            dst = tmp / f"{rot}_{'cortado' if cortar else 'inteiro'}.mp4"
             if not dst.exists() or dst.stat().st_mtime < f.stat().st_mtime:
-                print(f"  normalizando {f.name}...")
-                normalizar(f, dst)
+                print(f"  preparando {rot} ({f.name})...")
+                normalizar(f, dst, cortar)
             norm[(t, i)] = dst
 
     out = pasta / "prontos"

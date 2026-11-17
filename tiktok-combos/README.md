@@ -42,6 +42,15 @@ cta1.mp4     cta2.mp4     cta3.mp4
 `g1 / d1 / c1` também funcionam. Pode ter 2, 4 ou 5 de cada: o script calcula as
 combinações sozinho.
 
+### Corte de silêncio (automático)
+
+Antes de montar, cada cena tem os respiros e as pausas cortados (cortes secos, estilo
+TikTok), inclusive a sobra do começo e do fim. Pausas curtas entre palavras ficam.
+O corte é feito uma vez por cena e vale para todas as combinações.
+
+- `--sem-cortes`: desliga (vídeos sem narração, só música).
+- `--nao-cortar D1,G3`: não corta só essas cenas (ex.: demonstração feita em silêncio).
+
 ### Sem renomear (vídeos direto do celular)
 
 Grave sempre na mesma ordem (por exemplo: os 5 ganchos, depois os 2 desenvolvimentos,
