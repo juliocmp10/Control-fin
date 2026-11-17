@@ -42,6 +42,22 @@ cta1.mp4     cta2.mp4     cta3.mp4
 `g1 / d1 / c1` também funcionam. Pode ter 2, 4 ou 5 de cada: o script calcula as
 combinações sozinho.
 
+### Sem renomear (vídeos direto do celular)
+
+Grave sempre na mesma ordem (por exemplo: os 5 ganchos, depois os 2 desenvolvimentos,
+depois os 2 CTAs) e use `--ordem`. O script ignora os nomes e ordena pela **hora de
+gravação** que o celular salva dentro do vídeo:
+
+```bash
+# confere primeiro: gera conferencia.png com um quadro de cada cena e o rótulo G1, D1, C1...
+python3 montar.py cenas/fone-bluetooth --ordem 5,2,2 --conferir
+
+# se estiver certo, monta
+python3 montar.py cenas/fone-bluetooth --ordem 5,2,2
+```
+
+`--ordem` também aceita a sequência por extenso, por exemplo `GGGGGDDCC`.
+
 ## Rodar
 
 ```bash

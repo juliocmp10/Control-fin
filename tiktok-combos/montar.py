@@ -54,6 +54,71 @@ def duracao(path):
     return float(out.strip())
 
 
+def data_gravacao(path):
+    """Quando a cena foi gravada: metadado do celular, senão número no nome, senão data do arquivo."""
+    out = json.loads(run(["ffprobe", "-v", "error", "-show_entries",
+                          "format_tags:stream_tags", "-of", "json", str(path)]))
+    tags = dict(out.get("format", {}).get("tags", {}))
+    for s in out.get("streams", []):
+        for k, v in s.get("tags", {}).items():
+            tags.setdefault(k, v)
+    for k in ("com.apple.quicktime.creationdate", "creation_time"):
+        if tags.get(k):
+            return (0, tags[k], path.name)
+    digitos = "".join(re.findall(r"\d+", path.stem))
+    if len(digitos) >= 8:
+        return (1, digitos, path.name)
+    return (2, str(path.stat().st_mtime), path.name)
+
+
+def classificar_por_ordem(pasta, ordem):
+    """Ignora os nomes: ordena pela hora de gravação e distribui conforme --ordem.
+    ordem = "5,2,2" (5 ganchos, 2 desenv, 2 CTAs) ou "GGGGGDDCC"."""
+    if re.fullmatch(r"\d+,\d+,\d+", ordem):
+        g, d, c = map(int, ordem.split(","))
+        seq = "G" * g + "D" * d + "C" * c
+    else:
+        seq = ordem.upper().replace(",", "").replace(" ", "")
+        if set(seq) - set("GDC"):
+            sys.exit("--ordem deve ser tipo 5,2,2 ou GGGGGDDCC")
+    arquivos = sorted((f for f in pasta.iterdir() if f.suffix.lower() in VIDEO_EXT),
+                      key=data_gravacao)
+    if len(arquivos) != len(seq):
+        sys.exit(f"Achei {len(arquivos)} vídeos na pasta, mas --ordem pede {len(seq)}.")
+    cenas = {"G": [], "D": [], "C": []}
+    for f, t in zip(arquivos, seq):
+        cenas[t].append(f)
+    return cenas
+
+
+def folha_conferencia(cenas, saida):
+    """Imagem com o quadro do meio de cada cena + rótulo, para conferir antes de montar."""
+    tmp = saida.parent / ".thumbs"
+    tmp.mkdir(exist_ok=True)
+    fonte = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+    fonte = f"fontfile={fonte}:" if Path(fonte).exists() else ""
+    i = 0
+    for t in "GDC":
+        for n, f in enumerate(cenas[t], 1):
+            dur = duracao(f)
+            rot = f"{t}{n}  {dur:.1f}s"
+            nome = re.sub(r"[^A-Za-z0-9._-]", "_", f.name)[:28]
+            vf = (f"scale=360:640:force_original_aspect_ratio=decrease,"
+                  f"pad=360:640:(ow-iw)/2:(oh-ih)/2,"
+                  f"drawtext={fonte}text='{rot}':fontsize=40:fontcolor=white:box=1:"
+                  f"boxcolor=black@0.7:boxborderw=10:x=14:y=14,"
+                  f"drawtext={fonte}text='{nome}':fontsize=16:fontcolor=white:box=1:"
+                  f"boxcolor=black@0.7:boxborderw=6:x=14:y=h-34")
+            run(["ffmpeg", "-y", "-v", "error", "-ss", f"{dur/2:.2f}", "-i", str(f),
+                 "-frames:v", "1", "-vf", vf, str(tmp / f"{i:03d}.png")])
+            i += 1
+    cols = min(i, 5)
+    linhas = -(-i // cols)
+    run(["ffmpeg", "-y", "-v", "error", "-framerate", "1", "-i", str(tmp / "%03d.png"),
+         "-vf", f"tile={cols}x{linhas}:padding=6:color=white", "-frames:v", "1", str(saida)])
+    shutil.rmtree(tmp)
+
+
 def classificar(pasta):
     cenas = {"G": [], "D": [], "C": []}
     for f in sorted(pasta.iterdir()):
@@ -159,16 +224,27 @@ def main():
     ap.add_argument("--variar", action="store_true",
                     help="aplica micro-variações (zoom 1-4%%, brilho/contraste/cor) em cada vídeo")
     ap.add_argument("--lotes", help="gera só esses lotes, ex.: 1,2,3 (padrão: todos)")
+    ap.add_argument("--ordem", help="ignora os nomes e usa a ordem de gravação: "
+                    "5,2,2 = 5 ganchos, 2 desenv, 2 CTAs (ou GGGGGDDCC)")
+    ap.add_argument("--conferir", action="store_true",
+                    help="só gera conferencia.png (quadro de cada cena com rótulo) e para")
     args = ap.parse_args()
 
     if not shutil.which("ffmpeg"):
         sys.exit("ffmpeg não encontrado.")
     pasta = Path(args.pasta)
-    cenas = classificar(pasta)
+    cenas = classificar_por_ordem(pasta, args.ordem) if args.ordem else classificar(pasta)
     nG, nD, nC = (len(cenas[t]) for t in "GDC")
     print(f"Cenas: {nG} ganchos, {nD} desenvolvimentos, {nC} CTAs -> {nG*nD*nC} combinações")
+    for t, rot in (("G", "gancho"), ("D", "desenv"), ("C", "cta")):
+        for n, f in enumerate(cenas[t], 1):
+            print(f"  {rot}{n}: {f.name}")
     if 0 in (nG, nD, nC):
         sys.exit("Falta pelo menos 1 cena de cada tipo.")
+    if args.conferir:
+        folha_conferencia(cenas, pasta / "conferencia.png")
+        print(f"Conferência salva em {pasta / 'conferencia.png'}")
+        return
 
     tmp = pasta / ".normalizadas"
     tmp.mkdir(exist_ok=True)
