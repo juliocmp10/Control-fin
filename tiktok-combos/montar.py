@@ -18,6 +18,7 @@ ou seja, dentro de um lote nenhuma cena se repete.
 """
 import argparse
 import csv
+import hashlib
 import json
 import random
 import re
@@ -195,11 +196,50 @@ def trechos_com_fala(src, pausa_max=0.20, folga_ini=0.06, folga_fim=0.10):
     return finais
 
 
-def normalizar(src, dst, cortar_silencio=True):
+FONTE = Path(__file__).parent / "fontes" / "Inter-ExtraBold.otf"
+
+
+def ler_textos(arquivo):
+    """textos.txt: uma linha por cena, ex.:  G1: O item que nunca sai da minha mochila
+    Use | para quebrar a linha onde quiser:  D1: 50.000 mAh | Display digital"""
+    textos = {}
+    if arquivo and Path(arquivo).exists():
+        for linha in Path(arquivo).read_text(encoding="utf-8").splitlines():
+            m = re.match(r"^\s*([GDCgdc]\d+)\s*[:=-]\s*(.+?)\s*$", linha)
+            if m:
+                textos[m.group(1).upper()] = m.group(2)
+    return textos
+
+
+def filtro_texto(texto, pasta_tmp, rot):
+    """drawtext com o texto quebrado em linhas, centralizado no terço de cima
+    (fora da área dos botões e da legenda do TikTok)."""
+    import textwrap
+    # "|" força quebra de linha; senão quebra sozinho
+    if "|" in texto:
+        linhas = [l.strip() for l in texto.split("|") if l.strip()]
+    else:
+        linhas = textwrap.wrap(texto, width=20) or [""]
+    fonte = FONTE if FONTE.exists() else Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf")
+    tam, esp = 76, 96
+    y0 = int(H * 0.17)
+    filtros = []
+    for i, linha in enumerate(linhas):
+        arq = pasta_tmp / f"{rot}_texto{i}.txt"
+        arq.write_text(linha, encoding="utf-8")
+        filtros.append(f"drawtext=fontfile='{fonte}':textfile='{arq}':fontsize={tam}:"
+                       f"fontcolor=white:borderw=7:bordercolor=black:"
+                       f"x=(w-text_w)/2:y={y0 + i * esp}")
+    return ",".join(filtros)
+
+
+def normalizar(src, dst, cortar_silencio=True, texto=None, rot="X"):
     """Deixa toda cena em 1080x1920, 30fps, H.264 + AAC estéreo, para emendar sem pulos.
     Com cortar_silencio, remove respiros e pausas (cortes secos, estilo TikTok)."""
     base = (f"scale={W}:{H}:force_original_aspect_ratio=decrease,"
             f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,format=yuv420p")
+    if texto:
+        base += "," + filtro_texto(texto, Path(dst).parent, rot)
     audio = tem_audio(src)
     trechos = trechos_com_fala(src) if (audio and cortar_silencio) else None
     cmd = ["ffmpeg", "-y", "-v", "error", "-i", str(src)]
@@ -297,6 +337,8 @@ def main():
                     help="só gera conferencia.png (quadro de cada cena com rótulo) e para")
     ap.add_argument("--sem-cortes", action="store_true",
                     help="não corta silêncios (use em vídeos sem narração)")
+    ap.add_argument("--textos", help="arquivo com o texto na tela de cada cena "
+                    "(padrão: textos.txt dentro da pasta, se existir)")
     ap.add_argument("--nao-cortar", default="",
                     help="cenas que não devem ter silêncio cortado, ex.: D1,G3")
     args = ap.parse_args()
@@ -317,6 +359,9 @@ def main():
         print(f"Conferência salva em {pasta / 'conferencia.png'}")
         return
 
+    textos = ler_textos(args.textos or pasta / "textos.txt")
+    if textos:
+        print(f"  textos na tela: {', '.join(sorted(textos))}")
     tmp = pasta / ".normalizadas"
     tmp.mkdir(exist_ok=True)
     norm = {}
@@ -324,10 +369,12 @@ def main():
         for i, f in enumerate(cenas[t]):
             rot = f"{t}{i+1}"
             cortar = not args.sem_cortes and rot not in args.nao_cortar.upper().split(",")
-            dst = tmp / f"{rot}_{'cortado' if cortar else 'inteiro'}.mp4"
+            texto = textos.get(rot)
+            marca = hashlib.md5((texto or "").encode()).hexdigest()[:6]
+            dst = tmp / f"{rot}_{'cortado' if cortar else 'inteiro'}_{marca}.mp4"
             if not dst.exists() or dst.stat().st_mtime < f.stat().st_mtime:
                 print(f"  preparando {rot} ({f.name})...")
-                normalizar(f, dst, cortar)
+                normalizar(f, dst, cortar, texto, rot)
             norm[(t, i)] = dst
 
     out = pasta / "prontos"

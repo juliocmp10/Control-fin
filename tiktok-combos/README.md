@@ -88,3 +88,17 @@ python3 montar.py cenas/fone-bluetooth --lotes 1,2,3
 
 Requer `ffmpeg` e Python 3. Os vídeos prontos ficam em `cenas/<produto>/prontos/`
 e não entram no git.
+
+## Texto na tela
+
+Crie `textos.txt` dentro da pasta das cenas, uma linha por cena:
+
+```
+G1: O item que nunca sai da minha mochila
+G2: Ela pesa 1 kg... e esse é o ponto
+D1: 50.000 mAh | Display digital | 2 cabos embutidos
+C1: Black Friday + frete grátis
+```
+
+O texto entra no terço de cima do vídeo (fora dos botões e da legenda do TikTok),
+branco com contorno preto. `|` força a quebra de linha. Emojis não são suportados.
